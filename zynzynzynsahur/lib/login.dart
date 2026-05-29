@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
+import './home.dart';
 
 
 // Stateful widget for the Login screen.
@@ -61,7 +62,7 @@ class _LoginState extends State<Login> {
                   child: Image.asset(
                       
                     // Path to the logo image.
-                    'assets/gfg.png', 
+                    'images/images.png', 
                     height: 30,
                     width: 20,
                   ), 
@@ -184,13 +185,17 @@ class _LoginState extends State<Login> {
                                 // Button text styling.
                                 color: Colors.white, fontSize: 22), 
                             ), 
-                            onPressed: () { 
-                              if (_formkey.currentState!.validate()) { 
-                                  
-                                // Prints a message if the form is valid.
-                                print('form submitted'); 
-                              } 
-                            }, 
+                            onPressed: () {
+                              if (_formkey.currentState!.validate()) {
+                                    // Navigate to the next page
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const HomePage(),
+                                    ),
+                                );
+                              }
+                          },
                             style: ElevatedButton.styleFrom(
                                 
                               // Button background color.
@@ -237,7 +242,7 @@ class _LoginState extends State<Login> {
                               child: Image.asset( 
                                   
                                 // Path to Google logo.
-                                'assets/google.png', 
+                                'images/images.png', 
                                 fit: BoxFit.cover, 
                               ), 
                             ), 
