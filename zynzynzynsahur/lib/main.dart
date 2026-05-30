@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart'; 
+import 'package:flutter/foundation.dart';
+import 'package:zynzynzynsahur/home.dart';
 import './login.dart';
 
 
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false, // Disables the debug banner.
-      home: Login(), // Sets the Login screen as the home screen.
+      home: HomePage(), // Sets the Login screen as the home screen.
     );
   }
 }
