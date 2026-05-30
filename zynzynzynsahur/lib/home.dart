@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'models/signRequest.dart';
 import 'signing_webview.dart';
 import 'pdf_viewer_screen.dart'; // Import the PDF viewer screen
+import 'document_details_screen.dart'; // Import the details screen
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -13,14 +14,28 @@ class HomePage extends StatelessWidget {
 
     final List<SignRequest> mockRequests = [
       SignRequest(
-        documentInfo: DocumentInfo(name: "Employment Contract", description: "Standard contract"),
-        submitter: "hr@company.com",
-        submitterName: "HR Department",
-        signatories: [],
-        applicationVersion: "1.0",
-        state: "SIGNED",
-        signingUrl: "https://www.google.com",
+        uuid: "123e4567-e89b-12d3-a456-426614174000",
+        state: "NOT_VALIDATED",
+        documentInfo: DocumentInfo(
+          name: "Sample Contract",
+          description: "This is a sample document for testing purposes.",
+        ),
+        submitter: "sender@example.com",
+        submitterName: "Zynyo Support",
+        signatories: [
+          Signatory(
+            name: "John Doe",
+            email: "john.doe@example.com",
+            signatoryRole: "SIGN",
+            authenticationMethods: [
+              AuthenticationMethod(type: "idin"),
+            ],
+          ),
+        ],
+        applicationVersion: "1.0.0",
+        reference: "REF-2024-001",
         content: mockPdfBase64,
+        signingUrl: "https://www.google.com", // Temporary link for testing
       ),
     ];
 
@@ -82,10 +97,15 @@ class HomePage extends StatelessWidget {
               ),
               // Option 3: Details
               ListTile(
-                leading: Icon(Icons.info_outline, color: Colors.blue),
-                title: Text("View Details"),
+                leading: const Icon(Icons.info_outline, color: Colors.blue),
+                title: const Text("View Details"),
                 onTap: () {
-                  // Show details dialog
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DocumentDetailsScreen(request: request),
+                    ),
+                  );
                 },
               ),
             ],
