@@ -7,6 +7,7 @@ class SignRequest {
   final String? reference;
   final String? content; // Base64 encoded PDF content
   final String? callbackURL;
+  final String? signingUrl; // The URL where the user can sign
   
   // These fields are often returned by the API in a response or list
   final String? uuid;
@@ -23,6 +24,7 @@ class SignRequest {
     this.reference,
     this.content,
     this.callbackURL,
+    this.signingUrl,
     this.uuid,
     this.state,
   });
@@ -37,6 +39,7 @@ class SignRequest {
       'reference': reference,
       'content': content,
       'callbackURL': callbackURL,
+      'signingUrl': signingUrl,
     };
   }
 
@@ -52,6 +55,7 @@ class SignRequest {
       reference: json['reference'],
       content: json['content'],
       callbackURL: json['callbackURL'],
+      signingUrl: json['signingUrl'],
       uuid: json['uuid'],
       state: json['state'],
     );
