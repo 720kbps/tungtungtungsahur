@@ -3,11 +3,17 @@ import 'package:flutter/foundation.dart';
 import 'package:zynzynzynsahur/home.dart';
 import 'app_config.dart';
 import './login.dart';
+import 'package:zynzynzynsahur/services/zynyo_service.dart';
 
 
 // Main function that initializes the app and calls runApp.
-void main() {
-  //AppConfig.validate();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  AppConfig.validate();
+  // Initialize the service and authenticate
+  final zynyo = ZynyoService();
+  await zynyo.authenticate();
+
   runApp(MyApp());
 }
 
@@ -17,7 +23,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false, // Disables the debug banner.
-      home: Login(),
+      home: HomePage(),
     );
   }
 }
