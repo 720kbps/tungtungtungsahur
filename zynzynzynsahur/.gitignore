@@ -43,3 +43,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Local secrets
+/config/secrets.json
+
+# Desktop generated ahh shi
+macos/Flutter/GeneratedPluginRegistrant.swift
+linux/flutter/generated_plugin_registrant.*
+linux/flutter/generated_plugins.cmake
+windows/flutter/generated_plugin_registrant.*
+windows/flutter/generated_plugins.cmake
