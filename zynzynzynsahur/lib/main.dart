@@ -7,7 +7,7 @@ import './login.dart';
 
 // Main function that initializes the app and calls runApp.
 void main() {
-  AppConfig.validate();
+  //AppConfig.validate();
   runApp(MyApp());
 }
 
