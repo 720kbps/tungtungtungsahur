@@ -92,6 +92,7 @@ class DocumentDetailsScreen extends StatelessWidget {
           children: [
             Text("Email: ${s.email}"),
             Text("Role: ${s.signatoryRole}"),
+            Text("Public UUID: ${s.publicUUID ?? 'N/A'}"),
             Text("Auth: ${s.authenticationMethods.map((a) => a.type).join(', ')}"),
           ],
         ),

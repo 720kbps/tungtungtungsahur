@@ -64,7 +64,7 @@ class ZynyoService {
     try {
       // api call
       final response = await _dio.get(
-        "${AppConfig.apiBaseUrl}/rest/v3/documents/PARTIALLY_VALIDATED,SIGNED,REJECTED/0/10", // Try single valid state first
+        "${AppConfig.apiBaseUrl}/rest/v3/documents/NOT_VALIDATED,PARTIALLY_VALIDATED,SIGNED,REJECTED/0/30", // Try single valid state first
         options: Options(
           headers: {
             'authorization': 'bearer $_accessToken',
@@ -79,5 +79,10 @@ class ZynyoService {
       print("API Error Response: ${e.response?.data}");
       rethrow;
     }
+  }
+  Future<String?> getSigningUrl(String publicUuid) async {
+    // The standard Zynyo sandbox signing link structure:
+    String link = "https://sandbox.zynyo.com/sign/$publicUuid";
+    return link;
   }
 }

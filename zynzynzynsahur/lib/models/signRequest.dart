@@ -95,6 +95,7 @@ class Signatory {
   final String signatoryRole;
   final String? state;
   final String? rejectReason;
+  final String? publicUUID;
   final List<AuthenticationMethod> authenticationMethods;
 
   Signatory({
@@ -104,6 +105,7 @@ class Signatory {
     required this.authenticationMethods,
     this.state,
     this.rejectReason,
+    this.publicUUID,
   });
 
   Map<String, dynamic> toJson() => {
@@ -112,6 +114,7 @@ class Signatory {
     'signatoryRole': signatoryRole,
     'state': state,
     'rejectReason': rejectReason,
+    'publicUUID': publicUUID,
     'authenticationMethods': authenticationMethods.map((a) => a.toJson()).toList(),
   };
 
@@ -122,6 +125,7 @@ class Signatory {
       signatoryRole: json['signatoryRole'] ?? 'SIGN',
       state: json['state'],
       rejectReason: json['rejectReason'],
+      publicUUID: json['publicUUID'],
       authenticationMethods: (json['authenticationMethods'] as List? ?? [])
           .map((a) => AuthenticationMethod.fromJson(a as Map<String, dynamic>))
           .toList(),

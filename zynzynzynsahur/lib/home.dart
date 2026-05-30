@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'models/signRequest.dart';
 import 'signing_webview.dart';
 import 'pdf_viewer_screen.dart';
+import 'document_details_screen.dart';
 import 'package:zynzynzynsahur/services/zynyo_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -76,16 +77,31 @@ class _HomePageState extends State<HomePage> {
                     leading: Icon(Icons.edit, color: Colors.blue),
                     title: Text("Sign Document"),
                     subtitle: Text("Open in secure webview"),
-                    onTap: () {
-                      if (request.signingUrl != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SigningWebView(
-                              url: request.signingUrl!,
-                              title: request.documentInfo.name,
-                            ),
-                          ),
+                    onTap: () async {
+                      // Find the signatory that matches the logged in user's email
+                      final userSignatory = request.signatories.firstWhere(
+                        (s) => s.email.toLowerCase() == widget.email.toLowerCase(),
+                        orElse: () => request.signatories.first,
+                      );
+
+                      if (userSignatory.publicUUID != null) {
+                        final url = await widget.zynyoService.getSigningUrl(userSignatory.publicUUID!);
+                        print("SIGNING URL: $url");
+                        
+                        // if (url != null && mounted) {
+                        //   Navigator.push(
+                        //     context,
+                        //     MaterialPageRoute(
+                        //       builder: (context) => SigningWebView(
+                        //         url: url,
+                        //         title: request.documentInfo.name,
+                        //       ),
+                        //     ),
+                        //   );
+                        // }
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("No signing link available for this signatory.")),
                         );
                       }
                     },
@@ -111,7 +127,15 @@ class _HomePageState extends State<HomePage> {
                     leading: Icon(Icons.info_outline, color: Colors.blue),
                     title: Text("View Details"),
                     subtitle: Text("State: ${request.state ?? 'Unknown'}"),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              DocumentDetailsScreen(request: request),
+                        ),
+                      );
+                    },
                   ),
                 ],
               );
