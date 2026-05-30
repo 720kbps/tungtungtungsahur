@@ -57,4 +57,27 @@ class ZynyoService {
       rethrow;
     }
   }
+
+  Future<List> getDocuments() async {
+    if (_accessToken == null) await authenticate();
+
+    try {
+      // api call
+      final response = await _dio.get(
+        "${AppConfig.apiBaseUrl}/rest/v3/documents/PARTIALLY_VALIDATED,SIGNED,REJECTED/0/10", // Try single valid state first
+        options: Options(
+          headers: {
+            'authorization': 'bearer $_accessToken',
+            'apikey': AppConfig.apiKey, // Some Zynyo endpoints require the apikey as well
+          },
+        ),
+      );
+
+      print(response.data);
+      return response.data;
+    } on DioException catch (e) {
+      print("API Error Response: ${e.response?.data}");
+      rethrow;
+    }
+  }
 }

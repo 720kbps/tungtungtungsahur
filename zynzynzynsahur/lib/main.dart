@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:zynzynzynsahur/home.dart';
+import 'package:zynzynzynsahur/models/signRequest.dart';
 import 'app_config.dart';
 import './login.dart';
 import 'package:zynzynzynsahur/services/zynyo_service.dart';
@@ -10,23 +11,22 @@ import 'package:zynzynzynsahur/services/zynyo_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   AppConfig.validate();
-  // Initialize the service and authenticate
+
   final zynyo = ZynyoService();
   await zynyo.authenticate();
 
-  runApp(MyApp());
-
-  //api tests
-  await zynyo.getDocumentCount();
+  runApp(MyApp(zynyoService: zynyo));
 }
 
-// Root widget of the application.
 class MyApp extends StatelessWidget {
+  final ZynyoService zynyoService;
+  const MyApp({required this.zynyoService});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // Disables the debug banner.
-      home: HomePage(),
+      debugShowCheckedModeBanner: false,
+      home: Login(zynyoService: zynyoService),
     );
   }
 }

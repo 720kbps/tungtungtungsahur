@@ -5,15 +5,15 @@ class SignRequest {
   final List<Signatory> signatories;
   final String applicationVersion;
   final String? reference;
-  final String? content; // Base64 encoded PDF content
+  final String? content;
   final String? callbackURL;
-  final String? signingUrl; // The URL where the user can sign
-  
-  // These fields are often returned by the API in a response or list
+  final String? signingUrl;
   final String? uuid;
   final String? state;
 
   bool get isSigned => state == 'SIGNED';
+  bool get isPending => state == 'NOT_VALIDATED' || state == 'PARTIALLY_VALIDATED';
+  bool get isRejected => state == 'REJECTED';
 
   SignRequest({
     required this.documentInfo,
@@ -44,20 +44,25 @@ class SignRequest {
   }
 
   factory SignRequest.fromJson(Map<String, dynamic> json) {
+    final signReq = json['signRequest'] as Map<String, dynamic>? ?? {};
+
     return SignRequest(
-      documentInfo: DocumentInfo.fromJson(json['documentInfo'] ?? {}),
-      submitter: json['submitter'] ?? '',
-      submitterName: json['submitterName'] ?? '',
+      documentInfo: DocumentInfo(
+        name: json['name'] ?? '',
+        description: json['description'] ?? '',
+      ),
+      submitter: signReq['submitter'] ?? '',
+      submitterName: signReq['submitterName'] ?? '',
       signatories: (json['signatories'] as List? ?? [])
-          .map((s) => Signatory.fromJson(s))
+          .map((s) => Signatory.fromJson(s as Map<String, dynamic>))
           .toList(),
-      applicationVersion: json['applicationVersion'] ?? '',
-      reference: json['reference'],
-      content: json['content'],
-      callbackURL: json['callbackURL'],
-      signingUrl: json['signingUrl'],
-      uuid: json['uuid'],
-      state: json['state'],
+      applicationVersion: signReq['applicationVersion'] ?? '',
+      reference: signReq['reference'],
+      content: null,
+      callbackURL: signReq['callbackURL'],
+      signingUrl: null,
+      uuid: json['documentUUID'],
+      state: json['documentState'],
     );
   }
 }
@@ -67,7 +72,7 @@ class DocumentInfo {
   final String description;
 
   DocumentInfo({
-    required this.name, 
+    required this.name,
     required this.description,
   });
 
@@ -88,6 +93,8 @@ class Signatory {
   final String name;
   final String email;
   final String signatoryRole;
+  final String? state;
+  final String? rejectReason;
   final List<AuthenticationMethod> authenticationMethods;
 
   Signatory({
@@ -95,12 +102,16 @@ class Signatory {
     required this.email,
     required this.signatoryRole,
     required this.authenticationMethods,
+    this.state,
+    this.rejectReason,
   });
 
   Map<String, dynamic> toJson() => {
     'name': name,
     'email': email,
     'signatoryRole': signatoryRole,
+    'state': state,
+    'rejectReason': rejectReason,
     'authenticationMethods': authenticationMethods.map((a) => a.toJson()).toList(),
   };
 
@@ -109,25 +120,38 @@ class Signatory {
       name: json['name'] ?? '',
       email: json['email'] ?? '',
       signatoryRole: json['signatoryRole'] ?? 'SIGN',
+      state: json['state'],
+      rejectReason: json['rejectReason'],
       authenticationMethods: (json['authenticationMethods'] as List? ?? [])
-          .map((a) => AuthenticationMethod.fromJson(a))
+          .map((a) => AuthenticationMethod.fromJson(a as Map<String, dynamic>))
           .toList(),
     );
   }
 }
 
 class AuthenticationMethod {
-  final String type;
+  final String type;      // e.g. MOUSE, SMSTAN
+  final String authType;  // e.g. AFTERVIEW, PREVIEW
+  final String processState;
 
-  AuthenticationMethod({required this.type});
+  AuthenticationMethod({
+    required this.type,
+    required this.authType,
+    required this.processState,
+  });
 
   Map<String, dynamic> toJson() => {
-    'type': type,
+    'authenticationMethods': type,
+    'authType': authType,
+    'processState': processState,
   };
 
   factory AuthenticationMethod.fromJson(Map<String, dynamic> json) {
     return AuthenticationMethod(
-      type: json['type'] ?? '',
+      // API uses 'authenticationMethods' as the key for the method type
+      type: json['authenticationMethods'] ?? '',
+      authType: json['authType'] ?? '',
+      processState: json['processState'] ?? '',
     );
   }
 }

@@ -2,15 +2,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import './home.dart';
+import 'package:zynzynzynsahur/services/zynyo_service.dart';
+
 
 
 // Stateful widget for the Login screen.
-class Login extends StatefulWidget { 
-  const Login({Key? key}) : super(key: key); 
+class Login extends StatefulWidget {
+  final ZynyoService zynyoService;                                    // add this
+  const Login({Key? key, required this.zynyoService}) : super(key: key); // add zynyoService
 
-  @override 
-  State<Login> createState() => _LoginState(); 
-} 
+  @override
+  State<Login> createState() => _LoginState();
+}
 
 // State class for the Login widget.
 class _LoginState extends State<Login> { 
@@ -191,7 +194,7 @@ class _LoginState extends State<Login> {
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const HomePage(),
+                                    builder: (context) => HomePage(zynyoService: widget.zynyoService,),
                                     ),
                                 );
                               }
