@@ -188,7 +188,7 @@ class _LoginState extends State<Login> {
                             onPressed: () {
                               if (_formkey.currentState!.validate()) {
                                     // Navigate to the next page
-                                Navigator.push(
+                                Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => const HomePage(),
