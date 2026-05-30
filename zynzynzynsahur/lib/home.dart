@@ -6,7 +6,9 @@ import 'package:zynzynzynsahur/services/zynyo_service.dart';
 
 class HomePage extends StatefulWidget {
   final ZynyoService zynyoService;
-  const HomePage({required this.zynyoService});
+  final String email;
+
+  const HomePage({required this.zynyoService, required this.email});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -21,6 +23,7 @@ class _HomePageState extends State<HomePage> {
     _documentsFuture = widget.zynyoService.getDocuments().then(
       (list) => list
           .map((item) => SignRequest.fromJson(item as Map<String, dynamic>))
+          .where((request) => request.signatories.any((s) => s.email.toLowerCase() == widget.email.toLowerCase()))
           .toList(),
     );
   }
