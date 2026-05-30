@@ -15,6 +15,9 @@ void main() async {
   await zynyo.authenticate();
 
   runApp(MyApp());
+
+  //api tests
+  await zynyo.getDocumentCount();
 }
 
 // Root widget of the application.
