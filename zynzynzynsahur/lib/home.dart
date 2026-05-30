@@ -9,7 +9,7 @@ class HomePage extends StatefulWidget {
   final ZynyoService zynyoService;
   final String email;
 
-  const HomePage({required this.zynyoService, required this.email});
+  const HomePage({super.key, required this.zynyoService, required this.email});
 
   @override
   State<HomePage> createState() => _HomePageState();

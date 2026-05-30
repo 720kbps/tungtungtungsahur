@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import '../app_config.dart';
-import '../models/signRequest.dart';
 
 class ZynyoService {
   // Singleton pattern

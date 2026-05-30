@@ -20,7 +20,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   final ZynyoService zynyoService;
-  const MyApp({required this.zynyoService});
+  const MyApp({super.key, required this.zynyoService});
 
   @override
   Widget build(BuildContext context) {
