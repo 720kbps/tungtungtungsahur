@@ -26,13 +26,16 @@ class _HomePageState extends State<HomePage> {
     _fetchDocuments();
   }
 
-  void _fetchDocuments() {
-    _documentsFuture = widget.zynyoService.getDocuments().then(
-      (list) => list
-          .map((item) => SignRequest.fromJson(item as Map<String, dynamic>))
-          .where((request) => request.signatories.any((s) => s.email.toLowerCase() == widget.email.toLowerCase()))
-          .toList(),
-    );
+  Future<void> _fetchDocuments() async {
+    setState(() {
+      _documentsFuture = widget.zynyoService.getDocuments().then(
+        (list) => list
+            .map((item) => SignRequest.fromJson(item as Map<String, dynamic>))
+            .where((request) => request.signatories.any((s) => s.email.toLowerCase() == widget.email.toLowerCase()))
+            .toList(),
+      );
+    });
+    await _documentsFuture;
   }
 
   List<SignRequest> _applyFilter(List<SignRequest> documents) {
@@ -90,97 +93,108 @@ class _HomePageState extends State<HomePage> {
                 final allRequests = snapshot.data ?? [];
                 final filteredRequests = _applyFilter(allRequests);
 
-                if (filteredRequests.isEmpty) {
-                  return Center(child: Text("No $_selectedFilter documents found."));
-                }
-
-                return ListView.builder(
-                  itemCount: filteredRequests.length,
-                  itemBuilder: (context, index) {
-                    final request = filteredRequests[index];
-
-                    return ExpansionTile(
-                      leading: Icon(
-                        request.isRejected
-                            ? Icons.cancel
-                            : request.isSigned
-                                ? Icons.check_circle
-                                : Icons.pending,
-                        color: request.isRejected
-                            ? Colors.red
-                            : request.isSigned
-                                ? Colors.green
-                                : Colors.orange,
-                      ),
-                      title: Text(request.documentInfo.name),
-                      subtitle: Text("From: ${request.submitterName}"),
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.edit, color: Colors.blue),
-                          title: const Text("Sign Document"),
-                          subtitle: const Text("Open in secure webview"),
-                          onTap: () async {
-                            final userSignatory = request.signatories.firstWhere(
-                              (s) => s.email.toLowerCase() == widget.email.toLowerCase(),
-                              orElse: () => request.signatories.first,
-                            );
-
-                            if (userSignatory.publicUUID != null) {
-                              final url = await widget.zynyoService.getSigningUrl(userSignatory.publicUUID!);
-                              if (url != null && mounted) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SigningWebView(
-                                      url: url,
-                                      title: request.documentInfo.name,
-                                    ),
-                                  ),
-                                );
-                              }
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("No signing link available for this signatory.")),
-                              );
-                            }
-                          },
-                        ),
-                        if (request.isSigned)
-                          ListTile(
-                            leading: const Icon(Icons.picture_as_pdf, color: Colors.blue),
-                            title: const Text("View PDF Document"),
-                            onTap: () async {
-                              final response = await widget.zynyoService.getSignedDocument(request.uuid!);
-                              final base64Pdf = response['documentContent'];
-                              if (base64Pdf != null && mounted) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PdfViewerScreen(
-                                      base64Content: base64Pdf,
-                                      title: request.documentInfo.name,
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-                        ListTile(
-                          leading: const Icon(Icons.info_outline, color: Colors.blue),
-                          title: const Text("View Details"),
-                          subtitle: Text("State: ${request.state ?? 'Unknown'}"),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => DocumentDetailsScreen(request: request),
+                return RefreshIndicator(
+                  onRefresh: _fetchDocuments,
+                  child: filteredRequests.isEmpty
+                      ? ListView(
+                          children: [
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.7,
+                              child: const Center(
+                                child: Text("No documents found."),
                               ),
+                            ),
+                          ],
+                        )
+                      : ListView.builder(
+                          itemCount: filteredRequests.length,
+                          itemBuilder: (context, index) {
+                            final request = filteredRequests[index];
+
+                            return ExpansionTile(
+                              leading: Icon(
+                                request.isRejected
+                                    ? Icons.cancel
+                                    : request.isSigned
+                                        ? Icons.check_circle
+                                        : Icons.pending,
+                                color: request.isRejected
+                                    ? Colors.red
+                                    : request.isSigned
+                                        ? Colors.green
+                                        : Colors.orange,
+                              ),
+                              title: Text(request.documentInfo.name),
+                              subtitle: Text("From: ${request.submitterName}"),
+                              children: [
+                                if(!request.isSigned && !request.isRejected)
+                                  ListTile(
+                                    leading: const Icon(Icons.edit, color: Colors.blue),
+                                    title: const Text("Sign Document"),
+                                    subtitle: const Text("Open in secure webview"),
+                                    onTap: () async {
+                                      final userSignatory = request.signatories.firstWhere(
+                                        (s) => s.email.toLowerCase() == widget.email.toLowerCase(),
+                                        orElse: () => request.signatories.first,
+                                      );
+
+                                      if (userSignatory.publicUUID != null) {
+                                        final url = await widget.zynyoService.getSigningUrl(userSignatory.publicUUID!);
+                                        if (url != null && mounted) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => SigningWebView(
+                                                url: url,
+                                                title: request.documentInfo.name,
+                                              ),
+                                            ),
+                                          ).then((_) => _fetchDocuments());
+                                        }
+                                      } else {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text("No signing link available for this signatory.")),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                if (request.isSigned)
+                                  ListTile(
+                                    leading: const Icon(Icons.picture_as_pdf, color: Colors.blue),
+                                    title: const Text("View signed PDF document"),
+                                    onTap: () async {
+                                      final response = await widget.zynyoService.getSignedDocument(request.uuid!);
+                                      final base64Pdf = response['documentContent'];
+                                      if (base64Pdf != null && mounted) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => PdfViewerScreen(
+                                              base64Content: base64Pdf,
+                                              title: request.documentInfo.name,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ListTile(
+                                  leading: const Icon(Icons.info_outline, color: Colors.blue),
+                                  title: const Text("View Details"),
+                                  subtitle: Text("State: ${request.state ?? 'Unknown'}"),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => DocumentDetailsScreen(request: request),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
                             );
                           },
                         ),
-                      ],
-                    );
-                  },
                 );
               },
             ),
