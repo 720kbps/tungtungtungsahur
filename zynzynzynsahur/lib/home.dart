@@ -5,6 +5,7 @@ import 'signing_webview.dart';
 import 'pdf_viewer_screen.dart';
 import 'document_details_screen.dart';
 import 'login.dart';
+import 'statistics_screen.dart';
 import 'package:zynzynzynsahur/services/zynyo_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -76,9 +77,26 @@ class _HomePageState extends State<HomePage> {
                     builder: (context) => Login(zynyoService: widget.zynyoService),
                   ),
                 );
+              } else if (value == 'statistics') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const StatisticsScreen(),
+                  ),
+                );
               }
             },
             itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'statistics',
+                child: Row(
+                  children: [
+                    Icon(Icons.bar_chart, color: Colors.black54),
+                    SizedBox(width: 8),
+                    Text('Statistics'),
+                  ],
+                ),
+              ),
               const PopupMenuItem<String>(
                 value: 'logout',
                 child: Row(
