@@ -27,6 +27,22 @@ class PdfViewerScreen extends StatelessWidget {
       // 2. Decode the base64 string into bytes
       final Uint8List bytes = base64Decode(cleanBase64);
 
+      // Check if it's actually a PDF (starts with %PDF-)
+      // In ASCII: % = 37, P = 80, D = 68, F = 70, - = 45
+      bool isPdf = bytes.length > 4 && 
+                   bytes[0] == 37 && 
+                   bytes[1] == 80 && 
+                   bytes[2] == 68 && 
+                   bytes[3] == 70;
+
+      if (!isPdf) {
+        String start = cleanBase64.length > 20 ? cleanBase64.substring(0, 20) : cleanBase64;
+        return Scaffold(
+          appBar: AppBar(title: Text("Error")),
+          body: Center(child: Text("Data is not a valid PDF. Starts with: $start")),
+        );
+      }
+
       return Scaffold(
         appBar: AppBar(
           title: Text(title),

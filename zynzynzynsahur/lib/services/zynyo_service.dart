@@ -5,14 +5,60 @@ class ZynyoService {
   // Singleton pattern
   static final ZynyoService _instance = ZynyoService._internal();
   factory ZynyoService() => _instance;
-  ZynyoService._internal();
 
   final Dio _dio = Dio();
+  final Dio _authDio = Dio(); // Dedicated Dio instance for authentication to avoid recursion
   String? _accessToken;
 
+  ZynyoService._internal() {
+    _dio.interceptors.add(QueuedInterceptorsWrapper(
+      onRequest: (options, handler) {
+        // Add authorization header if token is available
+        if (_accessToken != null) {
+          options.headers['authorization'] = 'bearer $_accessToken';
+        }
+        // Add API Key which is required for Zynyo REST API
+        options.headers['apikey'] = AppConfig.apiKey;
+        return handler.next(options);
+      },
+      onError: (DioException e, handler) async {
+        // Handle 401 Unauthorized errors (Token expired)
+        if (e.response?.statusCode == 401) {
+          // If the request has already been retried, don't try again to avoid infinite loops
+          if (e.requestOptions.extra['retried'] == true) {
+            return handler.next(e);
+          }
+
+          try {
+            // Check if another request already refreshed the token while this one was waiting
+            String? requestToken = e.requestOptions.headers['authorization'];
+            if (requestToken != 'bearer $_accessToken') {
+              // Token was already refreshed by another concurrent request, retry with the new token
+              e.requestOptions.headers['authorization'] = 'bearer $_accessToken';
+            } else {
+              // Refresh the token
+              await authenticate();
+              e.requestOptions.headers['authorization'] = 'bearer $_accessToken';
+            }
+
+            // Mark the request as retried and fetch it again
+            e.requestOptions.extra['retried'] = true;
+            final response = await _dio.fetch(e.requestOptions);
+            return handler.resolve(response);
+          } catch (err) {
+            // If re-authentication or retry fails, forward the error
+            return handler.next(e);
+          }
+        }
+        return handler.next(e);
+      },
+    ));
+  }
+
+  // Step 1: Authentication
   Future<void> authenticate() async {
     try {
-      final response = await _dio.post(
+      final response = await _authDio.post(
         AppConfig.tokenEndpoint,
         data: {
           'grant_type': 'client_credentials',
@@ -33,12 +79,12 @@ class ZynyoService {
   }
 
   Future<int> getDocumentCount() async {
+    // Check if we have a token initially. The interceptor will handle subsequent refreshes.
     if (_accessToken == null) await authenticate();
 
     try {
-      // api call
       final response = await _dio.get(
-        "${AppConfig.apiBaseUrl}/rest/v3/documentssummary/PARTIALLY_VALIDATED,SIGNED,REJECTED", // Try single valid state first
+        "${AppConfig.apiBaseUrl}/rest/v3/documentssummary/${AppConfig.allStates}", // Try single valid state first
         options: Options(
           headers: {
             'authorization': 'bearer $_accessToken',
@@ -48,7 +94,6 @@ class ZynyoService {
       );
 
       final count = response.data['documentsCount'] ?? 0;
-      print(response.data);
       return count;
     } on DioException catch (e) {
       print("API Error Response: ${e.response?.data}");
@@ -60,9 +105,8 @@ class ZynyoService {
     if (_accessToken == null) await authenticate();
     int count = await getDocumentCount();
     try {
-      // api call
       final response = await _dio.get(
-        "${AppConfig.apiBaseUrl}/rest/v3/documents/NOT_VALIDATED,PARTIALLY_VALIDATED,SIGNED,REJECTED/0/$count", // Try single valid state first
+        "${AppConfig.apiBaseUrl}/rest/v3/documents/${AppConfig.allStates}/0/$count", // Try single valid state first
         options: Options(
           headers: {
             'authorization': 'bearer $_accessToken',
@@ -71,14 +115,13 @@ class ZynyoService {
         ),
       );
 
-      print(response.data);
       return response.data;
     } on DioException catch (e) {
       print("API Error Response: ${e.response?.data}");
       rethrow;
     }
   }
-  
+
   Future<Map<String, dynamic>> getDocumentStatus(String uuid) async {
     if (_accessToken == null) await authenticate();
 
@@ -93,7 +136,7 @@ class ZynyoService {
         ),
       );
 
-      return response.data["documentState"];
+      return response.data;
     } on DioException catch (e) {
       print("API Error Response: ${e.response?.data}");
       rethrow;
@@ -114,7 +157,7 @@ class ZynyoService {
         ),
       );
 
-      return response.data["documentContent"];
+      return response.data;
     } on DioException catch (e) {
       print("API Error Response: ${e.response?.data}");
       rethrow;

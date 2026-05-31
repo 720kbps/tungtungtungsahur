@@ -2,7 +2,10 @@ class AppConfig {
   // API
   static const String apiBaseUrl = String.fromEnvironment('API_BASE_URL');
   static const String apiKey = String.fromEnvironment('API_KEY');
-  // OAuth / OpenID (access-token flow) 
+  static const String allStates = String.fromEnvironment(
+    'ALL_STATES',
+    defaultValue: 'NOT_VALIDATED,PARTIALLY_VALIDATED,VALIDATED,DELIVERY_EXPIRED,AUDITLOG,DISPATCHED,SIGNED,SIGNED_DELIVERY_REJECTED,SIGNED_DELIVERY_EXPIRED,EXPIRED,ARCHIVED,AUTHENTICATION_FAILED,CANCELLED,REJECTED,ERROR',
+  );  // OAuth / OpenID (access-token flow) 
   static const String clientId = String.fromEnvironment('CLIENT_ID');
   static const String clientSecret = String.fromEnvironment('CLIENT_SECRET');
   /// Full token endpoint from OpenID config ("token_endpoint"). realmId is in this URL
