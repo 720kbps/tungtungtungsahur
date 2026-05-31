@@ -101,16 +101,25 @@ class ZynyoService {
     }
   }
 
-  Future<List> getDocuments() async {
+  Future<List> getDocuments({
+    String? email,
+    int startPosition = 0,
+    int maxResults = 20,
+    bool recipientFilter = true,
+  }) async {
     if (_accessToken == null) await authenticate();
-    int count = await getDocumentCount();
+
     try {
       final response = await _dio.get(
-        "${AppConfig.apiBaseUrl}/rest/v3/documents/${AppConfig.allStates}/0/$count", // Try single valid state first
+        "${AppConfig.apiBaseUrl}/rest/v4/documents/${AppConfig.allStates}/$startPosition/$maxResults",
+        queryParameters: {
+          if (email != null && recipientFilter) 'recipients': email,
+          if (email != null && !recipientFilter) 'submitters': email,
+        },
         options: Options(
           headers: {
             'authorization': 'bearer $_accessToken',
-            'apikey': AppConfig.apiKey, // Some Zynyo endpoints require the apikey as well
+            'apikey': AppConfig.apiKey,
           },
         ),
       );
