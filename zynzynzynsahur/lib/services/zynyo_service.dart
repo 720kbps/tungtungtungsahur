@@ -38,7 +38,7 @@ class ZynyoService {
     try {
       // api call
       final response = await _dio.get(
-        "${AppConfig.apiBaseUrl}/rest/v3/documentssummary/PARTIALLY_VALIDATED,SIGNED,REJECTED", // Try single valid state first
+        "${AppConfig.apiBaseUrl}/rest/v3/documentssummary/${AppConfig.allStates}", // Try single valid state first
         options: Options(
           headers: {
             'authorization': 'bearer $_accessToken',
@@ -62,7 +62,7 @@ class ZynyoService {
     try {
       // api call
       final response = await _dio.get(
-        "${AppConfig.apiBaseUrl}/rest/v3/documents/NOT_VALIDATED,PARTIALLY_VALIDATED,SIGNED,REJECTED/0/$count", // Try single valid state first
+        "${AppConfig.apiBaseUrl}/rest/v3/documents/${AppConfig.allStates}/0/$count", // Try single valid state first
         options: Options(
           headers: {
             'authorization': 'bearer $_accessToken',
