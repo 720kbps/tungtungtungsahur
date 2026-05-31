@@ -301,7 +301,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   showSignButton: false,
                 ),
               ],
-            ),
+            )
           ),
         ],
       ),
