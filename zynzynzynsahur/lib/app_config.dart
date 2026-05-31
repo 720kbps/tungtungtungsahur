@@ -12,6 +12,8 @@ class AppConfig {
   static const String tokenEndpoint = String.fromEnvironment('TOKEN_ENDPOINT');
   /// "issuer" from OpenID config
   static const String issuer = String.fromEnvironment('ISSUER');
+    static const String firebaseKey = String.fromEnvironment('FIREBASE_VAPID_KEY');
+
 
   static bool get isConfigured =>
       clientId.isNotEmpty &&
