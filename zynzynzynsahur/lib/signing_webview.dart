@@ -6,10 +6,10 @@ class SigningWebView extends StatefulWidget {
   final String title;
 
   const SigningWebView({
-    Key? key,
+    super.key,
     required this.url,
     required this.title,
-  }) : super(key: key);
+  });
 
   @override
   State<SigningWebView> createState() => _SigningWebViewState();

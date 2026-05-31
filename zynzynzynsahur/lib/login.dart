@@ -9,7 +9,7 @@ import 'package:zynzynzynsahur/services/zynyo_service.dart';
 // Stateful widget for the Login screen.
 class Login extends StatefulWidget {
   final ZynyoService zynyoService;                                    // add this
-  const Login({Key? key, required this.zynyoService}) : super(key: key); // add zynyoService
+  const Login({super.key, required this.zynyoService}); // add zynyoService
 
   @override
   State<Login> createState() => _LoginState();
@@ -109,7 +109,7 @@ class _LoginState extends State<Login> {
                                 
                               // Validation for email format.
                               errorText: 'Please correct email filled'), 
-                          ]), 
+                          ]).call, 
                           decoration: InputDecoration( 
                               
                             // Placeholder text.
@@ -153,7 +153,7 @@ class _LoginState extends State<Login> {
                             
                               // Special character validation.
                               errorText: 'Psw must have at least one special character') 
-                          ]), 
+                          ]).call, 
                           decoration: InputDecoration( 
                             
                             // Placeholder text.
@@ -189,7 +189,11 @@ class _LoginState extends State<Login> {
                       // Login button.
                       Padding( 
                         padding: const EdgeInsets.all(28.0), 
-                        child: Container( 
+                        child: SizedBox( 
+                          width: MediaQuery.of(context).size.width, 
+                          
+                          // Button height.
+                          height: 50, 
                           child: ElevatedButton( 
                             child: Text( 
                               'Login', 
@@ -221,12 +225,6 @@ class _LoginState extends State<Login> {
                               foregroundColor: Colors.white, 
                             )
                           ), 
-                          
-                          // Button width.
-                          width: MediaQuery.of(context).size.width, 
-                          
-                          // Button height.
-                          height: 50, 
                         ), 
                       ), 
                       
@@ -252,7 +250,7 @@ class _LoginState extends State<Login> {
                         children: [ 
                           Padding( 
                             padding: EdgeInsets.fromLTRB(0, 20, 0, 0), 
-                            child: Container( 
+                            child: SizedBox( 
                               height: 40, 
                               width: 40, 
                               child: Image.asset( 

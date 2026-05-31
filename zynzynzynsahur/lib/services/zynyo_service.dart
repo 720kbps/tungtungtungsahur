@@ -97,10 +97,10 @@ class ZynyoService {
 
   Future<List> getDocuments() async {
     if (_accessToken == null) await authenticate();
-
+    int count = await getDocumentCount();
     try {
       final response = await _dio.get(
-        "${AppConfig.apiBaseUrl}/rest/v3/documents/NOT_VALIDATED,PARTIALLY_VALIDATED,SIGNED,REJECTED/0/30",
+        "${AppConfig.apiBaseUrl}/rest/v3/documents/NOT_VALIDATED,PARTIALLY_VALIDATED,SIGNED,REJECTED/0/$count",
       );
 
       return response.data;
