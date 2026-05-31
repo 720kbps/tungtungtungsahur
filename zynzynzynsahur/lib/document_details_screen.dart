@@ -4,7 +4,7 @@ import 'models/signRequest.dart';
 class DocumentDetailsScreen extends StatelessWidget {
   final SignRequest request;
 
-  const DocumentDetailsScreen({Key? key, required this.request}) : super(key: key);
+  const DocumentDetailsScreen({super.key, required this.request});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class DocumentDetailsScreen extends StatelessWidget {
 
             const Divider(height: 32),
             _sectionHeader("Signatories"),
-            ...request.signatories.map((s) => _signatoryTile(s)).toList(),
+            ...request.signatories.map((s) => _signatoryTile(s)),
 
             const Divider(height: 32),
             _sectionHeader("Other Information"),

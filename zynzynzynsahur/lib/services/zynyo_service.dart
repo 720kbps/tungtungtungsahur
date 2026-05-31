@@ -10,7 +10,6 @@ class ZynyoService {
   final Dio _dio = Dio();
   String? _accessToken;
 
-  // Step 1: Authentication
   Future<void> authenticate() async {
     try {
       final response = await _dio.post(
@@ -59,11 +58,11 @@ class ZynyoService {
 
   Future<List> getDocuments() async {
     if (_accessToken == null) await authenticate();
-
+    int count = await getDocumentCount();
     try {
       // api call
       final response = await _dio.get(
-        "${AppConfig.apiBaseUrl}/rest/v3/documents/NOT_VALIDATED,PARTIALLY_VALIDATED,SIGNED,REJECTED/0/30", // Try single valid state first
+        "${AppConfig.apiBaseUrl}/rest/v3/documents/NOT_VALIDATED,PARTIALLY_VALIDATED,SIGNED,REJECTED/0/$count", // Try single valid state first
         options: Options(
           headers: {
             'authorization': 'bearer $_accessToken',
