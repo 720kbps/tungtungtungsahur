@@ -84,7 +84,13 @@ class ZynyoService {
 
     try {
       final response = await _dio.get(
-        "${AppConfig.apiBaseUrl}/rest/v3/documentssummary/PARTIALLY_VALIDATED,SIGNED,REJECTED",
+        "${AppConfig.apiBaseUrl}/rest/v3/documentssummary/${AppConfig.allStates}", // Try single valid state first
+        options: Options(
+          headers: {
+            'authorization': 'bearer $_accessToken',
+            'apikey': AppConfig.apiKey, // Some Zynyo endpoints require the apikey as well
+          },
+        ),
       );
 
       final count = response.data['documentsCount'] ?? 0;
@@ -100,7 +106,13 @@ class ZynyoService {
     int count = await getDocumentCount();
     try {
       final response = await _dio.get(
-        "${AppConfig.apiBaseUrl}/rest/v3/documents/NOT_VALIDATED,PARTIALLY_VALIDATED,SIGNED,REJECTED/0/$count",
+        "${AppConfig.apiBaseUrl}/rest/v3/documents/${AppConfig.allStates}/0/$count", // Try single valid state first
+        options: Options(
+          headers: {
+            'authorization': 'bearer $_accessToken',
+            'apikey': AppConfig.apiKey, // Some Zynyo endpoints require the apikey as well
+          },
+        ),
       );
 
       return response.data;
