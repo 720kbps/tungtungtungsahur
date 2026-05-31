@@ -1,294 +1,140 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import './home.dart';
 import 'package:zynzynzynsahur/services/zynyo_service.dart';
 
-
-
-// Stateful widget for the Login screen.
 class Login extends StatefulWidget {
-  final ZynyoService zynyoService;                                    // add this
-  const Login({super.key, required this.zynyoService}); // add zynyoService
+  final ZynyoService zynyoService;
+  const Login({super.key, required this.zynyoService});
 
   @override
   State<Login> createState() => _LoginState();
 }
 
-// State class for the Login widget.
-class _LoginState extends State<Login> { 
-    
-  // Map to store user data (if needed in the future).
-  Map userData = {}; 
-  
-  // Key to manage the form state.
-  final _formkey = GlobalKey<FormState>(); 
-
-  // Controller to capture email input
+class _LoginState extends State<Login> {
+  final _formkey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
 
-  @override 
+  @override
   void dispose() {
     _emailController.dispose();
     super.dispose();
   }
 
-  @override 
-  Widget build(BuildContext context) { 
-    return Scaffold( 
-      appBar: AppBar( 
-        
-        // Title of the AppBar.
-        title: Text('Login'), 
-        
-        // Background color of the AppBar.
-        backgroundColor: Colors.green, 
-        
-        // Text color of the AppBar.
-        foregroundColor: Colors.white, 
-        
-        // Centers the title in the AppBar.
-        centerTitle: true, 
-      ), 
-      
-      // Allows scrolling for smaller screens.
-      body: SingleChildScrollView( 
-        child: Column( 
-          children: <Widget>[ 
-            
-            // Logo section at the top.
-            Padding( 
-              padding: const EdgeInsets.only(top: 30.0), 
-              child: Center( 
-                child: Container( 
-                  width: 120, 
-                  height: 120, 
-                  decoration: BoxDecoration( 
-                      
-                    // Rounded corners.
-                    borderRadius: BorderRadius.circular(40), 
-                    
-                    // Border styling.
-                    border: Border.all(color: Colors.blueGrey) 
-                  ), 
-                  child: Image.asset(
-                      
-                    // Path to the logo image.
-                    'images/images.png', 
-                    height: 30,
-                    width: 20,
-                  ), 
-                ), 
-              ), 
-            ), 
-            
-            // Form section for user input.
-            Padding( 
-              padding: EdgeInsets.symmetric(horizontal: 15), 
-              child: Padding( 
-                padding: const EdgeInsets.all(12.0), 
-                child: Form( 
-                    
-                  // Associates the form with the key.
-                  key: _formkey, 
-                  child: Column( 
-                    crossAxisAlignment: CrossAxisAlignment.start, 
-                    children: <Widget>[ 
-                        
-                      // Email input field.
-                      Padding( 
-                        padding: const EdgeInsets.all(12.0), 
-                        child: TextFormField( 
-                          controller: _emailController,
-                          validator: MultiValidator([ 
-                            RequiredValidator( 
-                              
-                              // Validation for required field.
-                              errorText: 'Enter email address'), 
-                            EmailValidator( 
-                                
-                              // Validation for email format.
-                              errorText: 'Please correct email filled'), 
-                          ]).call, 
-                          decoration: InputDecoration( 
-                              
-                            // Placeholder text.
-                            hintText: 'Email', 
-                            
-                            // Label for the field.
-                            labelText: 'Email', 
-                            prefixIcon: Icon(
-                              
-                              // Email icon.
-                              Icons.email, 
-                            ), 
-                            
-                            // Error message styling.
-                            errorStyle: TextStyle(fontSize: 18.0), 
-                            border: OutlineInputBorder( 
-                              borderSide: BorderSide(color: Colors.red), 
-                              borderRadius: BorderRadius.all( 
-                                  
-                                // Rounded border.
-                                Radius.circular(9.0)) 
-                            )
-                          )
-                        )
-                      ), 
-                      
-                      // // Password input field.
-                      // Padding( 
-                      //   padding: const EdgeInsets.all(12.0), 
-                      //   child: TextFormField( 
-                      //     validator: MultiValidator([ 
-                      //       RequiredValidator( 
-                                
-                      //         // Validation for required field.
-                      //         errorText: 'Please enter Password'), 
-                      //       MinLengthValidator(8, 
-                            
-                      //         // Minimum length validation.
-                      //         errorText: 'Password must be at least 8 characters'), 
-                      //       PatternValidator(r'(?=.*?[#!@$%^&*-])', 
-                            
-                      //         // Special character validation.
-                      //         errorText: 'Psw must have at least one special character') 
-                      //     ]).call, 
-                      //     decoration: InputDecoration( 
-                            
-                      //       // Placeholder text.
-                      //       hintText: 'Password', 
-                            
-                      //       // Label for the field.
-                      //       labelText: 'Password', 
-                      //       prefixIcon: Icon( 
-                                
-                      //         // Key icon for password.
-                      //         Icons.key, 
-                      //         color: Colors.green, 
-                      //       ), 
-                            
-                      //       // Error message styling.
-                      //       errorStyle: TextStyle(fontSize: 18.0), 
-                      //       border: OutlineInputBorder( 
-                      //         borderSide: BorderSide(color: Colors.red),
-                              
-                      //         // Rounded border.
-                      //         borderRadius: BorderRadius.all(Radius.circular(9.0)) 
-                      //       ), 
-                      //     ), 
-                      //   ), 
-                      // ), 
-                      
-                      // // Forget password text.
-                      // Container( 
-                      //   margin: EdgeInsets.fromLTRB(200, 0, 0, 0), 
-                      //   child: Text('Forget Password!'), 
-                      // ), 
-                      
-                      // Login button.
-                      Padding( 
-                        padding: const EdgeInsets.all(28.0), 
-                        child: SizedBox( 
-                          width: MediaQuery.of(context).size.width, 
-                          
-                          // Button height.
-                          height: 50, 
-                          child: ElevatedButton( 
-                            child: Text( 
-                              'Login', 
-                              style: TextStyle( 
-                                
-                                // Button text styling.
-                                color: Colors.white, fontSize: 22), 
-                            ), 
-                            onPressed: () {
-                              if (_formkey.currentState!.validate()) {
-                                    // Navigate to the next page
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => HomePage(
-                                      zynyoService: widget.zynyoService,
-                                      email: _emailController.text,
-                                    ),
-                                    ),
-                                );
-                              }
-                          },
-                            style: ElevatedButton.styleFrom(
-                                
-                              // Button background color.
-                              backgroundColor: Colors.green, 
-                              
-                              // Button text color.
-                              foregroundColor: Colors.white, 
-                            )
-                          ), 
-                        ), 
-                      ), 
-                      
-                      // Divider text for alternative sign-in options.
-                      Center( 
-                        child: Padding( 
-                          padding: EdgeInsets.fromLTRB(0, 30, 0, 0), 
-                          child: Center( 
-                            child: Text( 
-                              'Or Sign In Using!', 
-                              style: TextStyle( 
-                                  
-                                // Text styling.
-                                fontSize: 18, color: Colors.black), 
-                            ), 
-                          ), 
-                        ), 
-                      ), 
-                      
-                      // Social media sign-in options (Google in this case).
-                      Row( 
-                        mainAxisAlignment: MainAxisAlignment.center, 
-                        children: [ 
-                          Padding( 
-                            padding: EdgeInsets.fromLTRB(0, 20, 0, 0), 
-                            child: SizedBox( 
-                              height: 40, 
-                              width: 40, 
-                              child: Image.asset( 
-                                  
-                                // Path to Google logo.
-                                'images/images.png', 
-                                fit: BoxFit.cover, 
-                              ), 
-                            ), 
-                          ), 
-                        ], 
-                      ), 
-                      // Sign-up text at the bottom.
-                      Center( 
-                        child: Container( 
-                          padding: EdgeInsets.only(top: 50), 
-                          child: Text( 
-                            'SIGN UP!', 
-                            style: TextStyle( 
-                              fontSize: 20, 
-                              
-                              // Bold text.
-                              fontWeight: FontWeight.w700, 
-                              
-                              // Text color.
-                              color: Colors.lightBlue, 
-                            ), 
-                          ), 
-                        ), 
-                      ) 
-                    ]), 
-                )), 
-              ), 
-            ]), 
-        
-        ), 
-      );
-       
-  
-  } 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FB),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const SizedBox(height: 80),
+              Text(
+                "ZYNYO INBOX",
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF4F46E5),
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Welcome",
+                style: GoogleFonts.inter(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Sign in to access your documents",
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 48),
+              Form(
+                key: _formkey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _emailController,
+                      validator: MultiValidator([
+                        RequiredValidator(errorText: 'Email is required'),
+                        EmailValidator(errorText: 'Enter a valid email address'),
+                      ]).call,
+                      style: GoogleFonts.inter(),
+                      decoration: InputDecoration(
+                        labelText: 'Email Address',
+                        hintText: 'name@example.com',
+                        labelStyle: GoogleFonts.inter(color: Colors.black54),
+                        floatingLabelStyle: GoogleFonts.inter(color: Colors.black),
+                        filled: true,
+                        fillColor: Colors.white,
+                        prefixIcon: const Icon(Icons.email_outlined, color: Colors.black54),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Colors.black, width: 1),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_formkey.currentState!.validate()) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => HomePage(
+                                  zynyoService: widget.zynyoService,
+                                  email: _emailController.text,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Sign In',
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
