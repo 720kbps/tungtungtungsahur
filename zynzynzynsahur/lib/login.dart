@@ -136,55 +136,55 @@ class _LoginState extends State<Login> {
                         )
                       ), 
                       
-                      // Password input field.
-                      Padding( 
-                        padding: const EdgeInsets.all(12.0), 
-                        child: TextFormField( 
-                          validator: MultiValidator([ 
-                            RequiredValidator( 
+                      // // Password input field.
+                      // Padding( 
+                      //   padding: const EdgeInsets.all(12.0), 
+                      //   child: TextFormField( 
+                      //     validator: MultiValidator([ 
+                      //       RequiredValidator( 
                                 
-                              // Validation for required field.
-                              errorText: 'Please enter Password'), 
-                            MinLengthValidator(8, 
+                      //         // Validation for required field.
+                      //         errorText: 'Please enter Password'), 
+                      //       MinLengthValidator(8, 
                             
-                              // Minimum length validation.
-                              errorText: 'Password must be at least 8 characters'), 
-                            PatternValidator(r'(?=.*?[#!@$%^&*-])', 
+                      //         // Minimum length validation.
+                      //         errorText: 'Password must be at least 8 characters'), 
+                      //       PatternValidator(r'(?=.*?[#!@$%^&*-])', 
                             
-                              // Special character validation.
-                              errorText: 'Psw must have at least one special character') 
-                          ]).call, 
-                          decoration: InputDecoration( 
+                      //         // Special character validation.
+                      //         errorText: 'Psw must have at least one special character') 
+                      //     ]).call, 
+                      //     decoration: InputDecoration( 
                             
-                            // Placeholder text.
-                            hintText: 'Password', 
+                      //       // Placeholder text.
+                      //       hintText: 'Password', 
                             
-                            // Label for the field.
-                            labelText: 'Password', 
-                            prefixIcon: Icon( 
+                      //       // Label for the field.
+                      //       labelText: 'Password', 
+                      //       prefixIcon: Icon( 
                                 
-                              // Key icon for password.
-                              Icons.key, 
-                              color: Colors.green, 
-                            ), 
+                      //         // Key icon for password.
+                      //         Icons.key, 
+                      //         color: Colors.green, 
+                      //       ), 
                             
-                            // Error message styling.
-                            errorStyle: TextStyle(fontSize: 18.0), 
-                            border: OutlineInputBorder( 
-                              borderSide: BorderSide(color: Colors.red),
+                      //       // Error message styling.
+                      //       errorStyle: TextStyle(fontSize: 18.0), 
+                      //       border: OutlineInputBorder( 
+                      //         borderSide: BorderSide(color: Colors.red),
                               
-                              // Rounded border.
-                              borderRadius: BorderRadius.all(Radius.circular(9.0)) 
-                            ), 
-                          ), 
-                        ), 
-                      ), 
+                      //         // Rounded border.
+                      //         borderRadius: BorderRadius.all(Radius.circular(9.0)) 
+                      //       ), 
+                      //     ), 
+                      //   ), 
+                      // ), 
                       
-                      // Forget password text.
-                      Container( 
-                        margin: EdgeInsets.fromLTRB(200, 0, 0, 0), 
-                        child: Text('Forget Password!'), 
-                      ), 
+                      // // Forget password text.
+                      // Container( 
+                      //   margin: EdgeInsets.fromLTRB(200, 0, 0, 0), 
+                      //   child: Text('Forget Password!'), 
+                      // ), 
                       
                       // Login button.
                       Padding( 
