@@ -18,27 +18,122 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  late Future<List<SignRequest>> _documentsFuture;
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  // Inbox (recipient)
+  final List<SignRequest> _inboxDocs = [];
+  bool _inboxLoading = false;
+  bool _inboxHasMore = true;
+  int _inboxPage = 0;
+
+  // Sent (submitter)
+  final List<SignRequest> _sentDocs = [];
+  bool _sentLoading = false;
+  bool _sentHasMore = true;
+  int _sentPage = 0;
+
+  static const int _pageSize = 20;
+
   String _selectedFilter = 'All';
   final List<String> _filters = ['All', 'Pending', 'Signed', 'Rejected'];
+
+  final ScrollController _inboxScrollController = ScrollController();
+  final ScrollController _sentScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _fetchDocuments();
+    _tabController = TabController(length: 2, vsync: this);
+    _fetchInbox(reset: true);
+    _fetchSent(reset: true);
+
+    _inboxScrollController.addListener(() {
+      if (_inboxScrollController.position.pixels >=
+          _inboxScrollController.position.maxScrollExtent - 200) {
+        _fetchInbox();
+      }
+    });
+    _sentScrollController.addListener(() {
+      if (_sentScrollController.position.pixels >=
+          _sentScrollController.position.maxScrollExtent - 200) {
+        _fetchSent();
+      }
+    });
   }
 
-  Future<void> _fetchDocuments() async {
-    setState(() {
-      _documentsFuture = widget.zynyoService.getDocuments().then(
-            (list) => list
-                .map((item) => SignRequest.fromJson(item as Map<String, dynamic>))
-                .where((request) => request.signatories.any((s) => s.email.toLowerCase() == widget.email.toLowerCase()))
-                .toList(),
-          );
-    });
-    await _documentsFuture;
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _inboxScrollController.dispose();
+    _sentScrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchInbox({bool reset = false}) async {
+    if (_inboxLoading || (!_inboxHasMore && !reset)) return;
+    setState(() => _inboxLoading = true);
+
+    if (reset) {
+      _inboxDocs.clear();
+      _inboxPage = 0;
+      _inboxHasMore = true;
+    }
+
+    try {
+      final list = await widget.zynyoService.getDocuments(
+        email: widget.email,
+        startPosition: _inboxPage * _pageSize,
+        maxResults: _pageSize,
+        recipientFilter: true,
+      );
+      final docs = list
+          .map((item) => SignRequest.fromJson(item as Map<String, dynamic>))
+          .toList();
+
+      setState(() {
+        _inboxDocs.addAll(docs);
+        _inboxPage++;
+        _inboxHasMore = docs.length == _pageSize;
+      });
+    } catch (e) {
+      print("Inbox fetch error: $e");
+    } finally {
+      setState(() => _inboxLoading = false);
+    }
+  }
+
+  Future<void> _fetchSent({bool reset = false}) async {
+    if (_sentLoading || (!_sentHasMore && !reset)) return;
+    setState(() => _sentLoading = true);
+
+    if (reset) {
+      _sentDocs.clear();
+      _sentPage = 0;
+      _sentHasMore = true;
+    }
+
+    try {
+      final list = await widget.zynyoService.getDocuments(
+        email: widget.email,
+        startPosition: _sentPage * _pageSize,
+        maxResults: _pageSize,
+        recipientFilter: false,
+      );
+      final docs = list
+          .map((item) => SignRequest.fromJson(item as Map<String, dynamic>))
+          .toList();
+
+      setState(() {
+        _sentDocs.addAll(docs);
+        _sentPage++;
+        _sentHasMore = docs.length == _pageSize;
+      });
+    } catch (e) {
+      print("Sent fetch error: $e");
+    } finally {
+      setState(() => _sentLoading = false);
+    }
   }
 
   List<SignRequest> _applyFilter(List<SignRequest> documents) {
@@ -49,6 +144,57 @@ class _HomePageState extends State<HomePage> {
       if (_selectedFilter == 'Rejected') return doc.isRejected;
       return true;
     }).toList();
+  }
+
+  void _onSignDocument(BuildContext context, SignRequest request) async {
+    final userSignatory = request.signatories.firstWhere(
+      (s) => s.email.toLowerCase() == widget.email.toLowerCase(),
+      orElse: () => request.signatories.first,
+    );
+
+    if (userSignatory.publicUUID != null) {
+      final url = await widget.zynyoService.getSigningUrl(userSignatory.publicUUID!);
+      if (url != null && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SigningWebView(
+              url: url,
+              title: request.documentInfo.name,
+            ),
+          ),
+        ).then((_) => _fetchInbox(reset: true));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No signing link available for this signatory.")),
+      );
+    }
+  }
+
+  void _onViewPdf(BuildContext context, SignRequest request) async {
+    final response = await widget.zynyoService.getSignedDocument(request.uuid!);
+    final base64Pdf = response['documentContent'];
+    if (base64Pdf != null && mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PdfViewerScreen(
+            base64Content: base64Pdf,
+            title: request.documentInfo.name,
+          ),
+        ),
+      );
+    }
+  }
+
+  void _onViewDetails(BuildContext context, SignRequest request) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DocumentDetailsScreen(request: request),
+      ),
+    );
   }
 
   @override
@@ -110,56 +256,51 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.black,
+          labelColor: Colors.black,
+          unselectedLabelColor: Colors.black38,
+          labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600),
+          tabs: [
+            Tab(
+              icon: const Icon(Icons.inbox),
+              text: "Inbox (${_inboxDocs.length})",
+            ),
+            Tab(
+              icon: const Icon(Icons.send),
+              text: "Sent (${_sentDocs.length})",
+            ),
+          ],
+        ),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildFilters(),
           Expanded(
-            child: FutureBuilder<List<SignRequest>>(
-              future: _documentsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text("Error: ${snapshot.error}"));
-                }
-
-                final allRequests = snapshot.data ?? [];
-                final filteredRequests = _applyFilter(allRequests);
-
-                return RefreshIndicator(
-                  onRefresh: _fetchDocuments,
-                  child: filteredRequests.isEmpty
-                      ? ListView(
-                          children: [
-                            SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.6,
-                              child: Center(
-                                child: Text(
-                                  "No $_selectedFilter documents found.",
-                                  style: GoogleFonts.inter(color: Colors.grey),
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: filteredRequests.length,
-                          itemBuilder: (context, index) {
-                            return _DocumentCard(
-                              request: filteredRequests[index],
-                              currentUserEmail: widget.email,
-                              onSign: (request) => _onSignDocument(context, request),
-                              onViewPdf: (request) => _onViewPdf(context, request),
-                              onViewDetails: (request) => _onViewDetails(context, request),
-                            );
-                          },
-                        ),
-                );
-              },
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildDocumentList(
+                  docs: _applyFilter(_inboxDocs),
+                  isLoading: _inboxLoading,
+                  hasMore: _inboxHasMore,
+                  scrollController: _inboxScrollController,
+                  onRefresh: () => _fetchInbox(reset: true),
+                  emptyMessage: "No documents in your inbox.",
+                  showSignButton: true,
+                ),
+                _buildDocumentList(
+                  docs: _applyFilter(_sentDocs),
+                  isLoading: _sentLoading,
+                  hasMore: _sentHasMore,
+                  scrollController: _sentScrollController,
+                  onRefresh: () => _fetchSent(reset: true),
+                  emptyMessage: "You haven't sent any documents.",
+                  showSignButton: false,
+                ),
+              ],
             ),
           ),
         ],
@@ -186,11 +327,7 @@ class _HomePageState extends State<HomePage> {
               ),
               selected: isSelected,
               onSelected: (selected) {
-                if (selected) {
-                  setState(() {
-                    _selectedFilter = filter;
-                  });
-                }
+                if (selected) setState(() => _selectedFilter = filter);
               },
               selectedColor: Colors.black,
               backgroundColor: const Color(0xFFECEEF2),
@@ -206,53 +343,60 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _onSignDocument(BuildContext context, SignRequest request) async {
-    final userSignatory = request.signatories.firstWhere(
-      (s) => s.email.toLowerCase() == widget.email.toLowerCase(),
-      orElse: () => request.signatories.first,
-    );
-
-    if (userSignatory.publicUUID != null) {
-      final url = await widget.zynyoService.getSigningUrl(userSignatory.publicUUID!);
-      if (url != null && mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SigningWebView(
-              url: url,
-              title: request.documentInfo.name,
+  Widget _buildDocumentList({
+    required List<SignRequest> docs,
+    required bool isLoading,
+    required bool hasMore,
+    required ScrollController scrollController,
+    required Future<void> Function() onRefresh,
+    required String emptyMessage,
+    required bool showSignButton,
+  }) {
+    if (!isLoading && docs.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              emptyMessage,
+              style: GoogleFonts.inter(color: Colors.grey[600]),
             ),
-          ),
-        ).then((_) => _fetchDocuments());
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No signing link available for this signatory.")),
-      );
-    }
-  }
-
-  void _onViewPdf(BuildContext context, SignRequest request) async {
-    final response = await widget.zynyoService.getSignedDocument(request.uuid!);
-    final base64Pdf = response['documentContent'];
-    if (base64Pdf != null && mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PdfViewerScreen(
-            base64Content: base64Pdf,
-            title: request.documentInfo.name,
-          ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: onRefresh,
+              icon: const Icon(Icons.refresh),
+              label: const Text("Refresh"),
+            ),
+          ],
         ),
       );
     }
-  }
 
-  void _onViewDetails(BuildContext context, SignRequest request) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DocumentDetailsScreen(request: request),
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView.builder(
+        controller: scrollController,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: docs.length + (hasMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == docs.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          return _DocumentCard(
+            request: docs[index],
+            currentUserEmail: widget.email,
+            showSignButton: showSignButton,
+            onSign: (request) => _onSignDocument(context, request),
+            onViewPdf: (request) => _onViewPdf(context, request),
+            onViewDetails: (request) => _onViewDetails(context, request),
+          );
+        },
       ),
     );
   }
@@ -261,6 +405,7 @@ class _HomePageState extends State<HomePage> {
 class _DocumentCard extends StatelessWidget {
   final SignRequest request;
   final String currentUserEmail;
+  final bool showSignButton;
   final Function(SignRequest) onSign;
   final Function(SignRequest) onViewPdf;
   final Function(SignRequest) onViewDetails;
@@ -268,6 +413,7 @@ class _DocumentCard extends StatelessWidget {
   const _DocumentCard({
     required this.request,
     required this.currentUserEmail,
+    required this.showSignButton,
     required this.onSign,
     required this.onViewPdf,
     required this.onViewDetails,
@@ -275,13 +421,13 @@ class _DocumentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final signedCount = request.signatories.where((s) => s.state == 'SIGNED').length;
+    final signedCount = request.signatories.where((s) => s.state == 'VALIDATED').length;
     final totalCount = request.signatories.length;
     final currentUserSignatory = request.signatories.firstWhere(
       (s) => s.email.toLowerCase() == currentUserEmail.toLowerCase(),
       orElse: () => request.signatories.first,
     );
-    final hasCurrentUserSigned = currentUserSignatory.state == 'SIGNED';
+    final hasCurrentUserSigned = currentUserSignatory.state == 'VALIDATED';
 
     Color statusColor;
     Color iconBgColor;
@@ -337,7 +483,7 @@ class _DocumentCard extends StatelessWidget {
                     color: iconBgColor,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(iconData, color: _getStatusTextColor(request), size: 24),
+                  child: Icon(iconData, color: _getStatusTextColor(), size: 24),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -354,9 +500,9 @@ class _DocumentCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        statusText == "Waiting" 
-                          ? "Sent to ${request.signatories.firstWhere((s) => s.state != 'SIGNED', orElse: () => request.signatories.first).name}"
-                          : "From ${request.submitterName}",
+                        statusText == "Waiting"
+                            ? "Sent to ${request.signatories.firstWhere((s) => s.state != 'VALIDATED', orElse: () => request.signatories.first).name}"
+                            : "From ${request.submitterName}",
                         style: GoogleFonts.inter(
                           color: Colors.black54,
                           fontSize: 13,
@@ -377,22 +523,21 @@ class _DocumentCard extends StatelessWidget {
                       child: Text(
                         statusText,
                         style: GoogleFonts.inter(
-                          color: _getStatusTextColor(request),
+                          color: _getStatusTextColor(),
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                     const SizedBox(height: 4),
-                    // We don't have date in model yet, but can show signatory count
                     if (!request.isSigned && !request.isRejected)
-                    Text(
-                      "$signedCount of $totalCount",
-                      style: GoogleFonts.inter(
-                        color: Colors.black38,
-                        fontSize: 11,
+                      Text(
+                        "$signedCount of $totalCount",
+                        style: GoogleFonts.inter(
+                          color: Colors.black38,
+                          fontSize: 11,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ],
@@ -417,16 +562,18 @@ class _DocumentCard extends StatelessWidget {
                     ],
                   )
                 else
-                   Row(
+                  Row(
                     children: [
                       Icon(
                         request.isSigned ? Icons.check_circle : Icons.error_outline,
                         size: 16,
-                        color: _getStatusTextColor(request),
+                        color: _getStatusTextColor(),
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        request.isSigned ? "All signatures collected" : "Request rejected",
+                        request.isSigned
+                            ? "All signatures collected"
+                            : "Request rejected",
                         style: GoogleFonts.inter(
                           color: Colors.black54,
                           fontSize: 13,
@@ -434,8 +581,7 @@ class _DocumentCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                
-                if (!request.isSigned && !request.isRejected)
+                if (showSignButton && !request.isSigned && !request.isRejected && !hasCurrentUserSigned)
                   TextButton(
                     onPressed: () => onSign(request),
                     style: TextButton.styleFrom(
@@ -458,7 +604,7 @@ class _DocumentCard extends StatelessWidget {
                     ),
                   )
                 else if (request.isSigned)
-                   TextButton(
+                  TextButton(
                     onPressed: () => onViewPdf(request),
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
@@ -487,17 +633,14 @@ class _DocumentCard extends StatelessWidget {
     );
   }
 
-  Color _getStatusTextColor(SignRequest request) {
+  Color _getStatusTextColor() {
     if (request.isRejected) return const Color(0xFF991B1B);
     if (request.isSigned) return const Color(0xFF166534);
-    
-    // Check if current user signed but others didn't (Waiting)
     final currentUserSignatory = request.signatories.firstWhere(
       (s) => s.email.toLowerCase() == currentUserEmail.toLowerCase(),
       orElse: () => request.signatories.first,
     );
-    if (currentUserSignatory.state == 'SIGNED') return const Color(0xFF1E40AF);
-
+    if (currentUserSignatory.state == 'VALIDATED') return const Color(0xFF1E40AF);
     return const Color(0xFF9A3412);
   }
 }
