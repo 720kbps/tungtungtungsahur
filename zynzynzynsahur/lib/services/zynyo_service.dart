@@ -78,6 +78,49 @@ class ZynyoService {
       rethrow;
     }
   }
+  
+  Future<Map<String, dynamic>> getDocumentStatus(String uuid) async {
+    if (_accessToken == null) await authenticate();
+
+    try {
+      final response = await _dio.get(
+        "${AppConfig.apiBaseUrl}/rest/v3/document/$uuid",
+        options: Options(
+          headers: {
+            'authorization': 'bearer $_accessToken',
+            'apikey': AppConfig.apiKey,
+          },
+        ),
+      );
+
+      return response.data["documentState"];
+    } on DioException catch (e) {
+      print("API Error Response: ${e.response?.data}");
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getSignedDocument(String uuid) async {
+    if (_accessToken == null) await authenticate();
+
+    try {
+      final response = await _dio.get(
+        "${AppConfig.apiBaseUrl}/rest/v3/sign/getsigned/$uuid",
+        options: Options(
+          headers: {
+            'authorization': 'bearer $_accessToken',
+            'apikey': AppConfig.apiKey,
+          },
+        ),
+      );
+
+      return response.data["documentContent"];
+    } on DioException catch (e) {
+      print("API Error Response: ${e.response?.data}");
+      rethrow;
+    }
+  }
+
   Future<String?> getSigningUrl(String publicUuid) async {
     // The standard Zynyo sandbox signing link structure:
     String link = "https://sandbox.zynyo.com/sign/$publicUuid";

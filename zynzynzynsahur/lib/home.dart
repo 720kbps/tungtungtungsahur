@@ -87,18 +87,17 @@ class _HomePageState extends State<HomePage> {
                       if (userSignatory.publicUUID != null) {
                         final url = await widget.zynyoService.getSigningUrl(userSignatory.publicUUID!);
                         print("SIGNING URL: $url");
-                        
-                        // if (url != null && mounted) {
-                        //   Navigator.push(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //       builder: (context) => SigningWebView(
-                        //         url: url,
-                        //         title: request.documentInfo.name,
-                        //       ),
-                        //     ),
-                        //   );
-                        // }
+                        if (url != null && mounted) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SigningWebView(
+                                url: url,
+                                title: request.documentInfo.name,
+                              ),
+                            ),
+                          );
+                        }
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("No signing link available for this signatory.")),
@@ -106,23 +105,26 @@ class _HomePageState extends State<HomePage> {
                       }
                     },
                   ),
-                  ListTile(
-                    leading: Icon(Icons.picture_as_pdf, color: Colors.blue),
-                    title: Text("View PDF Document"),
-                    onTap: () {
-                      if (request.content != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PdfViewerScreen(
-                              base64Content: request.content!,
-                              title: request.documentInfo.name,
+                  if (request.isSigned)
+                    ListTile(
+                      leading: const Icon(Icons.picture_as_pdf, color: Colors.blue),
+                      title: const Text("View PDF Document"),
+                      onTap: () async {
+                        final response = await widget.zynyoService.getSignedDocument(request.uuid!);
+                        final base64Pdf = response['documentContent'];
+                        if (base64Pdf != null && mounted) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PdfViewerScreen(
+                                base64Content: base64Pdf,
+                                title: request.documentInfo.name,
+                              ),
                             ),
-                          ),
-                        );
-                      }
-                    },
-                  ),
+                          );
+                        }
+                      },
+                    ),
                   ListTile(
                     leading: Icon(Icons.info_outline, color: Colors.blue),
                     title: Text("View Details"),
