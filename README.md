@@ -10,6 +10,16 @@ Developed for the **Inter-Actief Hackathon 2026**.
 * **Matthias van der Most**
 * **Bogdan Mocanu**
 
+## About Zynyo Inbox
+**Zynyo Inbox** is a sleek and modern document management application developed during the **Inter-Actief Hackathon 2026**. Built with Flutter, it provides a seamless interface for users to manage, view, and sign documents powered by the Zynyo API.
+
+### Key Features
+- **Modern Dashboard:** A clean, high-fidelity inbox to track pending, signed, and rejected documents.
+- **Secure Signing:** Integrated webview for secure, on-the-go document signing.
+- **PDF Viewer:** Built-in previewer for signed documents.
+- **Hackathon Stats Tracker:** A dedicated section to monitor the "essential" metrics of a coding marathon—from energy drinks to crashouts.
+
+
 ## Setup Instructions
 
 1. **Secrets Configuration**
